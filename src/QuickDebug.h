@@ -15,12 +15,16 @@
 #ifndef _DEBUG_h
 #define _DEBUG_h
 
-#define NO_DEBUG	0 ///< @brief Debug level that will give no debug output
-#define ERROR	1 ///< @brief Debug level that will give error messages
-#define WARN	2 ///< @brief Debug level that will give error and warning messages
-#define INFO	3 ///< @brief Debug level that will give error, warning and info messages
-#define DBG	    4 ///< @brief Debug level that will give error, warning,info AND dbg messages
-#define VERBOSE	5 ///< @brief Debug level that will give all defined messages
+#define QD_NO_DEBUG	0 ///< @brief Debug level that will give no debug output
+#define QD_ERROR	1 ///< @brief Debug level that will give error messages
+#define QD_WARN	2 ///< @brief Debug level that will give error and warning messages
+#define QD_INFO	3 ///< @brief Debug level that will give error, warning and info messages
+#define QD_DBG	    4 ///< @brief Debug level that will give error, warning,info AND dbg messages
+#define QD_VERBOSE	5 ///< @brief Debug level that will give all defined messages
+
+#ifdef ARDUINO_ARCH_STM32
+#include <WSerial.h>
+#endif
 
 #include <Arduino.h>
 #ifdef ESP32
@@ -65,7 +69,7 @@ extern DebugTagManager debugTagManager;
 #define getTagDebugLevel(tagName) debugTagManager.getTagLevel(tagName)
 #define getTagDebugLevelStr(tagName) debugTagManager.getTagLevelStr(tagName)
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ARDUINO_ARCH_STM32)
 #ifndef CONFIG_ARDUHAL_LOG_COLORS
 #define CONFIG_ARDUHAL_LOG_COLORS 0
 #endif
@@ -104,41 +108,45 @@ extern DebugTagManager debugTagManager;
 #endif
 #endif //ESP8266
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ARDUINO_ARCH_STM32)
 
 #define DEBUG_ESP_PORT Serial
 
 #ifdef DEBUG_ESP_PORT
 
 const char* extractFileName (const char* path);
+#ifdef ESP8266
 #define DEBUG_LINE_PREFIX(TAG) DEBUG_ESP_PORT.printf(PSTR("[%6lu][H:%5lu][%s:%d] %s(): ["),millis(),(unsigned long)ESP.getFreeHeap(),extractFileName(__FILE__),__LINE__,__FUNCTION__); DEBUG_ESP_PORT.print(TAG); DEBUG_ESP_PORT.print("] ");
+#else
+#define DEBUG_LINE_PREFIX(TAG) DEBUG_ESP_PORT.printf(PSTR("[%6lu][%s:%d] %s(): ["),millis(),extractFileName(__FILE__),__LINE__,__FUNCTION__); DEBUG_ESP_PORT.print(TAG); DEBUG_ESP_PORT.print("] ");
+#endif
 
-#if DEBUG_LEVEL >= VERBOSE
+#if DEBUG_LEVEL >= QD_VERBOSE
 #define DEBUG_VERBOSE(TAG,text,...) if(debugTagManager.getTagLevel(TAG) >= VERBOSE){DEBUG_ESP_PORT.print(ARDUHAL_LOG_COLOR_V "V ");DEBUG_LINE_PREFIX(TAG);DEBUG_ESP_PORT.printf(PSTR(text),##__VA_ARGS__);DEBUG_ESP_PORT.println(ARDUHAL_LOG_RESET_COLOR);}
 #else
 #define DEBUG_VERBOSE(...)
 #endif
 
-#if DEBUG_LEVEL >= DBG
-#define DEBUG_DBG(TAG,text,...) if(debugTagManager.getTagLevel(TAG) >= DBG){DEBUG_ESP_PORT.print(ARDUHAL_LOG_COLOR_D "D ");DEBUG_LINE_PREFIX(TAG); DEBUG_ESP_PORT.printf(PSTR(text),##__VA_ARGS__);DEBUG_ESP_PORT.println(ARDUHAL_LOG_RESET_COLOR);}
+#if DEBUG_LEVEL >= QD_DBG
+#define DEBUG_DBG(TAG,text,...) if(debugTagManager.getTagLevel(TAG) >= QD_DBG){DEBUG_ESP_PORT.print(ARDUHAL_LOG_COLOR_D "D ");DEBUG_LINE_PREFIX(TAG); DEBUG_ESP_PORT.printf(PSTR(text),##__VA_ARGS__);DEBUG_ESP_PORT.println(ARDUHAL_LOG_RESET_COLOR);}
 #else
 #define DEBUG_DBG(...)
 #endif
 
-#if DEBUG_LEVEL >= INFO
-#define DEBUG_INFO(TAG,text,...) if(debugTagManager.getTagLevel(TAG) >= INFO){DEBUG_ESP_PORT.print(ARDUHAL_LOG_COLOR_I "I ");DEBUG_LINE_PREFIX(TAG);DEBUG_ESP_PORT.printf(PSTR(text),##__VA_ARGS__);DEBUG_ESP_PORT.println(ARDUHAL_LOG_RESET_COLOR);}
+#if DEBUG_LEVEL >= QD_INFO
+#define DEBUG_INFO(TAG,text,...) if(debugTagManager.getTagLevel(TAG) >= QD_INFO){DEBUG_ESP_PORT.print(ARDUHAL_LOG_COLOR_I "I ");DEBUG_LINE_PREFIX(TAG);DEBUG_ESP_PORT.printf(PSTR(text),##__VA_ARGS__);DEBUG_ESP_PORT.println(ARDUHAL_LOG_RESET_COLOR);}
 #else
 #define DEBUG_INFO(...)
 #endif
 
-#if DEBUG_LEVEL >= WARN
-#define DEBUG_WARN(TAG,text,...) if(debugTagManager.getTagLevel(TAG) >= WARN){DEBUG_ESP_PORT.print(ARDUHAL_LOG_COLOR_W "W ");DEBUG_LINE_PREFIX(TAG);DEBUG_ESP_PORT.printf(PSTR(text),##__VA_ARGS__);DEBUG_ESP_PORT.println(ARDUHAL_LOG_RESET_COLOR);}
+#if DEBUG_LEVEL >= QD_WARN
+#define DEBUG_WARN(TAG,text,...) if(debugTagManager.getTagLevel(TAG) >= QD_WARN){DEBUG_ESP_PORT.print(ARDUHAL_LOG_COLOR_W "W ");DEBUG_LINE_PREFIX(TAG);DEBUG_ESP_PORT.printf(PSTR(text),##__VA_ARGS__);DEBUG_ESP_PORT.println(ARDUHAL_LOG_RESET_COLOR);}
 #else
 #define DEBUG_WARN(...)
 #endif
 
-#if DEBUG_LEVEL >= ERROR
-#define DEBUG_ERROR(TAG,text,...) if(debugTagManager.getTagLevel(TAG) >= ERROR){DEBUG_ESP_PORT.print(ARDUHAL_LOG_COLOR_E "E ");DEBUG_LINE_PREFIX(TAG);DEBUG_ESP_PORT.printf(PSTR(text),##__VA_ARGS__);DEBUG_ESP_PORT.println(ARDUHAL_LOG_RESET_COLOR);}
+#if DEBUG_LEVEL >= QD_ERROR
+#define DEBUG_ERROR(TAG,text,...) if(debugTagManager.getTagLevel(TAG) >= QD_ERROR){DEBUG_ESP_PORT.print(ARDUHAL_LOG_COLOR_E "E ");DEBUG_LINE_PREFIX(TAG);DEBUG_ESP_PORT.printf(PSTR(text),##__VA_ARGS__);DEBUG_ESP_PORT.println(ARDUHAL_LOG_RESET_COLOR);}
 #else
 #define DEBUG_ERROR(...)
 #endif

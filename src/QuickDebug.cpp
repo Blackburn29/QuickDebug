@@ -23,6 +23,23 @@ const char* IRAM_ATTR extractFileName (const char* path) {
 
 #endif // ESP8266
 
+#ifdef ARDUINO_ARCH_STM32
+const char* extractFileName (const char* path) {
+    size_t i = 0;
+    size_t pos = 0;
+    char* p = (char*)path;
+    while (*p) {
+        i++;
+        if (*p == '/' || *p == '\\') {
+            pos = i;
+        }
+        p++;
+    }
+    return path + pos;
+}
+
+#endif // ARDUINO_ARCH_STM32
+
 void DebugTagManager::setTagLevel (const std::string& tagName, int level) {
     bool found = false;
 
@@ -62,7 +79,7 @@ int DebugTagManager::getTagLevel (const std::string& tagName) {
     }
 #if defined ESP32
     return CORE_DEBUG_LEVEL;
-#elif defined ESP8266
+#elif defined(ESP8266) || defined(ARDUINO_ARCH_STM32)
     return DEBUG_LEVEL;
 #endif
 }
@@ -74,7 +91,7 @@ void DebugTagManager::setTagToDefaultLevel (const std::string& tagName) {
 #ifdef ESP32
             tagLevels.erase (tagLevel);
 #else
-            tagLevel->level = VERBOSE;
+            tagLevel->level = QD_VERBOSE;
 #endif // ESP32
         }
     }
@@ -84,22 +101,22 @@ std::string DebugTagManager::getTagLevelStr (const std::string& tagName) {
     std::string tagLevelStr;
 
     switch (debugTagManager.getTagLevel (tagName)) {
-    case ERROR:
+    case QD_ERROR:
         tagLevelStr = "ERROR";
         break;
-    case WARN:
+    case QD_WARN:
         tagLevelStr = "WARN";
         break;
-    case INFO:
+    case QD_INFO:
         tagLevelStr = "INFO";
         break;
-    case DBG:
+    case QD_DBG:
         tagLevelStr = "DBG";
         break;
-    case VERBOSE:
+    case QD_VERBOSE:
         tagLevelStr = "VERBOSE";
         break;
-    case NO_DEBUG:
+    case QD_NO_DEBUG:
         tagLevelStr = "NONE";
         break;
     default:
